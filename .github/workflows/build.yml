@@ -15,4 +15,9 @@ jobs:
           java-version: 17
           cache: gradle
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Create Release
+        uses: actions/upload-artifact@v2
+        with:
+          name: PdfViewer
+          path: ./**/*.apk
