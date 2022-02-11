@@ -23,6 +23,7 @@ import android.webkit.WebViewClient;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -145,9 +146,7 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
 
             final Bundle args = new Bundle();
             args.putString(KEY_PROPERTIES, properties);
-            runOnUiThread(() -> {
-                LoaderManager.getInstance(PdfViewer.this).restartLoader(DocumentPropertiesLoader.ID, args, PdfViewer.this);
-            });
+            runOnUiThread(() -> LoaderManager.getInstance(PdfViewer.this).restartLoader(DocumentPropertiesLoader.ID, args, PdfViewer.this));
         }
     }
 
@@ -161,7 +160,7 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
         mWebView = findViewById(R.id.webview);
 
         if (BuildConfig.DEBUG) {
-            mWebView.setWebContentsDebuggingEnabled(true);
+            WebView.setWebContentsDebuggingEnabled(true);
         }
 
         mWebView.setOnApplyWindowInsetsListener((view, insets) -> {
@@ -210,7 +209,7 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
 
                 if ("/viewer.html".equals(path)) {
                     final WebResourceResponse response = fromAsset("text/html", path);
-                    HashMap<String, String> headers = new HashMap<String, String>();
+                    HashMap<String, String> headers = new HashMap<>();
                     headers.put("Content-Security-Policy", CONTENT_SECURITY_POLICY);
                     headers.put("Permissions-Policy", PERMISSIONS_POLICY);
                     headers.put("X-Content-Type-Options", "nosniff");
@@ -247,7 +246,7 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
                     public boolean onTapUp() {
                         if (mUri != null) {
                             mWebView.evaluateJavascript("isTextSelected()", selection -> {
-                                if (!Boolean.valueOf(selection)) {
+                                if (!Boolean.parseBoolean(selection)) {
                                     if ((getWindow().getDecorView().getSystemUiVisibility() &
                                             View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
                                         hideSystemUi();
@@ -317,19 +316,20 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
         }
     }
 
+    @NonNull
     @Override
     public Loader<List<CharSequence>> onCreateLoader(int id, Bundle args) {
         return new DocumentPropertiesLoader(this, args.getString(KEY_PROPERTIES), mNumPages, mUri);
     }
 
     @Override
-    public void onLoadFinished(Loader<List<CharSequence>> loader, List<CharSequence> data) {
+    public void onLoadFinished(@NonNull Loader<List<CharSequence>> loader, List<CharSequence> data) {
         mDocumentProperties = data;
         LoaderManager.getInstance(this).destroyLoader(DocumentPropertiesLoader.ID);
     }
 
     @Override
-    public void onLoaderReset(Loader<List<CharSequence>> loader) {
+    public void onLoaderReset(@NonNull Loader<List<CharSequence>> loader) {
         mDocumentProperties = null;
     }
 
@@ -424,7 +424,7 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
     }
 
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putParcelable(STATE_URI, mUri);
         savedInstanceState.putInt(STATE_PAGE, mPage);
@@ -469,7 +469,7 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        final int ids[] = { R.id.action_zoom_in, R.id.action_zoom_out, R.id.action_jump_to_page,
+        final int[] ids = { R.id.action_zoom_in, R.id.action_zoom_out, R.id.action_jump_to_page,
                 R.id.action_next, R.id.action_previous, R.id.action_first, R.id.action_last,
                 R.id.action_rotate_clockwise, R.id.action_rotate_counterclockwise,
                 R.id.action_view_document_properties };
